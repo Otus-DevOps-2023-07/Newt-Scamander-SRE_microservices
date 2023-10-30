@@ -1,0 +1,13 @@
+{
+    "catalog_id": "xxxxxxxxxx",
+    "service_key_file": "service-key.json",
+    "service_account_id": "xxxxxxxxxxx",
+    "image_family":"ubuntu-2004-lts",
+    "instance_cores": "4",
+    "disk_type": "network-hdd",
+    "disk_size_gb": "12",
+    "zone": "ru-central1-a",
+    "subnet_id": "xxxxxxxxx",
+    "env_ssh_username": "ubuntu",
+    "old_variant_env_yc_env_source_image_id": "xxxxxxxxxxx"
+}

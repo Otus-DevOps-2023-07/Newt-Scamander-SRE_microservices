@@ -1,0 +1,6 @@
+---
+- name: Configure and deploy DB # some comments for name
+  hosts: db
+  become: true
+  roles:
+    - db

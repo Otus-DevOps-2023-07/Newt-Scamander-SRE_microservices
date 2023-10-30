@@ -1,0 +1,40 @@
+{
+    "_meta": {
+        "hostvars": {
+            "reddit-app-2-2023-10-29-04-46": {
+                "ansible_host": "158.160.112.102",
+                "internal_ip": "10.128.0.14"
+            },
+            "reddit-db-2023-10-29-04-45": {
+                "ansible_host": "158.160.126.142",
+                "internal_ip": "10.128.0.32"
+            },
+            "reddit-app-1-2023-10-29-04-46": {
+                "ansible_host": "51.250.6.216",
+                "internal_ip": "10.128.0.16"
+            }
+        }
+    },
+    "all": {
+        "hosts": [
+            "reddit-app-2-2023-10-29-04-46",
+            "reddit-db-2023-10-29-04-45",
+            "reddit-app-1-2023-10-29-04-46"
+        ],
+        "vars": {
+            "ansible_connection": "ssh",
+            "ansible_user": "ubuntu"
+        }
+    },
+    "app": {
+        "hosts": [
+            "reddit-app-2-2023-10-29-04-46",
+            "reddit-app-1-2023-10-29-04-46"
+        ]
+    },
+    "db": {
+        "hosts": [
+            "reddit-db-2023-10-29-04-45"
+        ]
+    }
+}

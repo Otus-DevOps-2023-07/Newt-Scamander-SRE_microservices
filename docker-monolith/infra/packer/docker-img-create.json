@@ -1,0 +1,31 @@
+{
+  "builders": [
+      {
+          "type": "yandex",
+          "service_account_key_file": "{{user `service_key_file`}}",
+          "folder_id": "{{user `catalog_id`}}",
+          "image_name": "docker-{{user `image_family`}}",
+          "source_image_family": "{{user `image_family`}}",
+          "ssh_username": "{{user `env_ssh_username`}}",
+          "platform_id": "standard-v1",
+          "service_account_id": "{{user `service_account_id`}}",
+          "instance_cores": "{{user `instance_cores`}}",
+          "disk_type": "{{user `disk_type`}}",
+          "disk_size_gb": "{{user `disk_size_gb`}}",
+          "use_ipv4_nat": "true"
+      }
+  ],
+  "provisioners": [
+      {
+          "type": "ansible",
+          "user": "{{user `env_ssh_username`}}",
+          "playbook_file": "../ansible/docker_install.yml",
+          "use_proxy" : "false",
+          "extra_arguments": [
+            "--scp-extra-args",
+            "'-O'"
+          ]
+      }
+
+  ]
+}
