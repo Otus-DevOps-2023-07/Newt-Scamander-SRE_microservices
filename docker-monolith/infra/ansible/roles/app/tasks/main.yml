@@ -1,0 +1,121 @@
+---
+# GET dinamyc env from hostvars
+- name: Set db_host&web_name&web_ip
+  ansible.builtin.set_fact:
+    db_host: "{{ (hostvars | dict2items | selectattr('key', 'match', '^reddit-db.*') | list | first).value.internal_ip }}"
+    web_name: "{{ (hostvars | dict2items | selectattr('key', 'match', '^reddit-app.*') | list | first).key }}"
+    web_ip: "{{ (hostvars | dict2items | selectattr('key', 'match', '^reddit-app.*') | list | first).value.ansible_host }}"
+    server_name: "{{ (hostvars | dict2items | selectattr('key', 'match', '^reddit-app.*') | list | first).key }}"
+
+###### Debug task (can be commented)
+
+- name: Print web_ip and db_ip
+  debug:
+    var: web_name,server_name,web_ip,db_host
+
+- name: Print local env
+  debug:
+    msg:
+     - "local env: {{ env }}"
+
+# tasks file for app
+- name: Add_unitd_file_for_Puma
+  ansible.builtin.copy:
+    src: files/puma.service
+    dest: /etc/systemd/system/puma.service
+    mode: "0644"
+    owner: ubuntu
+    group: ubuntu
+
+- name: Add_config_DB_connection
+  ansible.builtin.template:
+    src: ../templates/db_config.j2
+    dest: /home/ubuntu/db_config
+    owner: ubuntu
+    group: ubuntu
+
+- name: Enabled_puma
+  ansible.builtin.systemd:
+    name: puma
+    enabled: true
+    daemon_reload: true
+
+- name: Git_install
+  ansible.builtin.apt:
+    name: git
+    state: present
+
+- name: Create a temp directory for ruby
+  ansible.builtin.file:
+    path:  /tmp/build_ruby
+    state: directory
+    mode: 'u+rwx'
+
+- name: Get_old_ruby
+  ansible.builtin.get_url:
+    url:  https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.xz
+    dest: /tmp/build_ruby/ruby-2.2.0.tar.gz
+
+- name: Unpack Ruby 2.2.0
+  ansible.builtin.unarchive:
+    src: /tmp/build_ruby/ruby-2.2.0.tar.gz
+    dest: /tmp/build_ruby/
+    remote_src: yes
+
+- name: Build ruby
+  ansible.builtin.command: >
+    {{ item }}
+    chdir=/tmp/build_ruby/ruby-2.2.0
+    creates=/usr/local/bin/ruby
+  with_items:
+    - ./configure --enable-shared
+    - make
+    - make install
+
+- name: Add ruby symlinks
+  ansible.builtin.file:
+    src: "/usr/local/bin/{{ item }}"
+    dest: "/usr/bin/{{ item }}"
+    state: link
+    force: yes
+  with_items:
+    - erb
+    - gem
+    - irb
+    - rake
+    - rdoc
+    - ruby
+
+- name: Remove the working directory
+  ansible.builtin.file:
+    path:  /tmp/build_ruby
+    state: absent
+
+- name: Set_permission
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+    recurse: true
+  loop:
+    - /home/ubuntu/reddit/
+
+- name: Get_the_code
+  ansible.builtin.git:
+    repo: 'https://github.com/express42/reddit.git'
+    dest: /home/ubuntu/reddit
+    force: true
+    version: monolith # set the useful branch
+  notify: Reload_puma_service
+
+- name: Bundle_install
+  community.general.bundler:
+    state: present
+    chdir: /home/ubuntu/reddit
+
+# - name: Install bundler
+#   gem:
+#     name: bundler
+#     version: 1.14.3
+#     state: present
